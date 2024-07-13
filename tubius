@@ -6,23 +6,23 @@ local loadstring, getgenv, setclipboard, tablefind, UserInputService = loadstrin
 
 --// Loaded check
 
-if AirHub or AirHubV2Loaded then
+if Tubiu or TubiuV2Loaded then
     return
 end
 
 --// Environment
 
-getgenv().AirHub = {}
+getgenv().Tubiu = {}
 
 --// Load Modules
 
-loadstring(game:HttpGet("https://raw.githubusercontent.com/Exunys/AirHub/main/Modules/Aimbot.lua"))()
-loadstring(game:HttpGet("https://raw.githubusercontent.com/Exunys/AirHub/main/Modules/Wall%20Hack.lua"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/efk0666/Tubi/main/aimbot"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/efk0666/tubis/main/Wallhack"))()
 
 --// Variables
 
 local Library = loadstring(game:GetObjects("rbxassetid://7657867786")[1].Source)() -- Pepsi's UI Library
-local Aimbot, WallHack = getgenv().AirHub.Aimbot, getgenv().AirHub.WallHack
+local Aimbot, WallHack = getgenv().Tubiu.Aimbot, getgenv().Tubiu.WallHack
 local Parts, Fonts, TracersType = {"Head", "HumanoidRootPart", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg", "LeftHand", "RightHand", "LeftLowerArm", "RightLowerArm", "LeftUpperArm", "RightUpperArm", "LeftFoot", "LeftLowerLeg", "UpperTorso", "LeftUpperLeg", "RightFoot", "RightLowerLeg", "LowerTorso", "RightUpperLeg"}, {"UI", "System", "Plex", "Monospace"}, {"Bottom", "Center", "Mouse"}
 
 --// Frame
@@ -30,18 +30,18 @@ local Parts, Fonts, TracersType = {"Head", "HumanoidRootPart", "Torso", "Left Ar
 Library.UnloadCallback = function()
 	Aimbot.Functions:Exit()
 	WallHack.Functions:Exit()
-	getgenv().AirHub = nil
+	getgenv().Tubiu = nil
 end
 
 local MainFrame = Library:CreateWindow({
-	Name = "AirHub",
+	Name = "Tubiu",
 	Themeable = {
 		Image = "7059346386",
-		Info = "Made by Exunys\nPowered by Pepsi's UI Library",
+		Info = "Made by Tubiu Pepsi Library",
 		Credit = false
 	},
 	Background = "",
-	Theme = [[{"__Designer.Colors.topGradient":"3F0C64","__Designer.Colors.section":"C259FB","__Designer.Colors.hoveredOptionBottom":"4819B4","__Designer.Background.ImageAssetID":"rbxassetid://4427304036","__Designer.Colors.selectedOption":"4E149C","__Designer.Colors.unselectedOption":"482271","__Designer.Files.WorkspaceFile":"AirHub","__Designer.Colors.unhoveredOptionTop":"310269","__Designer.Colors.outerBorder":"391D57","__Designer.Background.ImageColor":"69009C","__Designer.Colors.tabText":"B9B9B9","__Designer.Colors.elementBorder":"160B24","__Designer.Background.ImageTransparency":100,"__Designer.Colors.background":"1E1237","__Designer.Colors.innerBorder":"531E79","__Designer.Colors.bottomGradient":"361A60","__Designer.Colors.sectionBackground":"21002C","__Designer.Colors.hoveredOptionTop":"6B10F9","__Designer.Colors.otherElementText":"7B44A8","__Designer.Colors.main":"AB26FF","__Designer.Colors.elementText":"9F7DB5","__Designer.Colors.unhoveredOptionBottom":"3E0088","__Designer.Background.UseBackgroundImage":false}]]
+	Theme = [[{"__Designer.Colors.topGradient":"3F0C64","__Designer.Colors.section":"C259FB","__Designer.Colors.hoveredOptionBottom":"4819B4","__Designer.Background.ImageAssetID":"rbxassetid://4427304036","__Designer.Colors.selectedOption":"4E149C","__Designer.Colors.unselectedOption":"482271","__Designer.Files.WorkspaceFile":"Tubiu","__Designer.Colors.unhoveredOptionTop":"310269","__Designer.Colors.outerBorder":"391D57","__Designer.Background.ImageColor":"69009C","__Designer.Colors.tabText":"B9B9B9","__Designer.Colors.elementBorder":"160B24","__Designer.Background.ImageTransparency":100,"__Designer.Colors.background":"1E1237","__Designer.Colors.innerBorder":"531E79","__Designer.Colors.bottomGradient":"361A60","__Designer.Colors.sectionBackground":"21002C","__Designer.Colors.hoveredOptionTop":"6B10F9","__Designer.Colors.otherElementText":"7B44A8","__Designer.Colors.main":"AB26FF","__Designer.Colors.elementText":"9F7DB5","__Designer.Colors.unhoveredOptionBottom":"3E0088","__Designer.Background.UseBackgroundImage":false}]]
 })
 
 --// Tabs
@@ -913,3 +913,14 @@ FunctionsSection:AddButton({
 		workspace.CurrentCamera.FieldOfView = 90
 	end
 })
+
+FunctionsSection:AddSlider({
+	Name = "Fov",
+	Value = workspace.CurrentCamera.FieldOfView,
+	Callback = function(New, Old)
+		workspace.CurrentCamera.FieldOfView = New
+	end,
+	Min = 10,
+	Max = 120,
+	Decimals = 2
+}).Default = workspace.CurrentCamera.FieldOfView
