@@ -1,5 +1,5 @@
 getgenv().AimPart = "HumanoidRootPart" -- For R15 Games: {UpperTorso, LowerTorso, HumanoidRootPart, Head} | For R6 Games: {Head, Torso, HumanoidRootPart}
-getgenv().AimlockKey = "T"
+getgenv().AimlockKey = "t"
 getgenv().AimRadius = 30 
 getgenv().ThirdPerson = true 
 getgenv().FirstPerson = true
@@ -149,20 +149,3 @@ RService.RenderStepped:Connect(function()
         end
     end
 end)
-getgenv().keytoclick = "c"
-tool = Instance.new("Tool")
-tool.RequiresHandle = false
-tool.Name = keytoclick
-tool.Activated:connect(function()
-    local vim = game:service("VirtualInputManager")
-vim:SendKeyEvent(true, keytoclick, false, game)
-end)
-tool.Parent = game.Players.LocalPlayer.Backpack
-wait(0.2)
-local AkaliNotif = loadstring(game:HttpGet("https://raw.githubusercontent.com/Kinlei/Dynissimo/main/Scripts/AkaliNotif.lua"))();
-local Notify = AkaliNotif.Notify;
-Notify({
-Description = "maz#6798";
-Title = "hexxed#3834";
-Duration = 10;
-});
