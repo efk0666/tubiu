@@ -145,16 +145,10 @@ local Button = Tab:CreateButton({
 })
 
 local Button = Tab:CreateButton({
-   Name = "Torso Aimbot",
+   Name = "Aimbot",
    Callback = function()
-  loadstring(game:HttpGet(('https://raw.githubusercontent.com/efk0666/Tubi/main/aimbot')))()
-   end,
-})
-
-local Button = Tab:CreateButton({
-   Name = "Head Aimbot",
-   Callback = function()
-   loadstring(game:HttpGet(('https://raw.githubusercontent.com/efk0666/Tubiuhub/main/headaimbot')))()
+  loadstring(game:HttpGet(('https://raw.githubusercontent.com/efk0666/Real-aimbot/main/aimbot')))()
+  TubiuDeveloperAimbot.Load()
    end,
 })
 
