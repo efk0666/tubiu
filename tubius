@@ -145,7 +145,7 @@ local Button = Tab:CreateButton({
 })
 
 local Button = Tab:CreateButton({
-   Name = "Aimbot press f",
+   Name = "Aimbot",
    Callback = function()
   loadstring(game:HttpGet(('https://raw.githubusercontent.com/efk0666/Real-aimbot/main/aimbot')))()
   TubiuDeveloperAimbot.Load()
