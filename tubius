@@ -1,151 +1,189 @@
-getgenv().AimPart = "HumanoidRootPart" -- For R15 Games: {UpperTorso, LowerTorso, HumanoidRootPart, Head} | For R6 Games: {Head, Torso, HumanoidRootPart}
-getgenv().AimlockKey = "t"
-getgenv().AimRadius = 30 
-getgenv().ThirdPerson = true 
-getgenv().FirstPerson = true
-getgenv().TeamCheck = false -- Check if Target is on your Team (True means it wont lock onto your teamates, false is vice versa) (Set it to false if there are no teams)
-getgenv().PredictMovement = true -- Predicts if they are moving in fast velocity (like jumping) so the aimbot will go a bit faster to match their speed 
-getgenv().PredictionVelocity = 8.8
+-- Load Rayfield UI Library
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
-local Players, Uis, RService, SGui = game:GetService"Players", game:GetService"UserInputService", game:GetService"RunService", game:GetService"StarterGui";
-local Client, Mouse, Camera, CF, RNew, Vec3, Vec2 = Players.LocalPlayer, Players.LocalPlayer:GetMouse(), workspace.CurrentCamera, CFrame.new, Ray.new, Vector3.new, Vector2.new;
-local Aimlock, MousePressed, CanNotify = true, false, false;
-local AimlockTarget;
-getgenv().CiazwareUniversalAimbotLoaded = true
+-- settings
+local settings = {
+    defaultcolor = Color3.fromRGB(255,0,0),
+    teamcheck = false,
+    teamcolor = true
+};
 
-getgenv().WorldToViewportPoint = function(P)
-    return Camera:WorldToViewportPoint(P)
-end
+-- services
+local runService = game:GetService("RunService");
+local players = game:GetService("Players");
 
-getgenv().WorldToScreenPoint = function(P)
-    return Camera.WorldToScreenPoint(Camera, P)
-end
+-- variables
+local localPlayer = players.LocalPlayer;
+local camera = workspace.CurrentCamera;
 
-getgenv().GetObscuringObjects = function(T)
-    if T and T:FindFirstChild(getgenv().AimPart) and Client and Client.Character:FindFirstChild("Head") then 
-        local RayPos = workspace:FindPartOnRay(RNew(
-            T[getgenv().AimPart].Position, Client.Character.Head.Position)
-        )
-        if RayPos then return RayPos:IsDescendantOf(T) end
-    end
-end
+-- functions
+local newVector2, newColor3, newDrawing = Vector2.new, Color3.new, Drawing.new;
+local tan, rad = math.tan, math.rad;
+local wtvp = function(position) local screenPos, visible = camera:WorldToViewportPoint(position) return newVector2(screenPos.X, screenPos.Y), visible, screenPos.Z end;
 
-getgenv().GetNearestTarget = function()
-    -- Credits to whoever made this, i didnt make it, and my own mouse2plr function kinda sucks
-    local players = {}
-    local PLAYER_HOLD  = {}
-    local DISTANCES = {}
-    for i, v in pairs(Players:GetPlayers()) do
-        if v ~= Client then
-            table.insert(players, v)
-        end
-    end
-    for i, v in pairs(players) do
-        if v.Character ~= nil then
-            local AIM = v.Character:FindFirstChild("Head")
-            if getgenv().TeamCheck == true and v.Team ~= Client.Team then
-                local DISTANCE = (v.Character:FindFirstChild("Head").Position - game.Workspace.CurrentCamera.CFrame.p).magnitude
-                local RAY = Ray.new(game.Workspace.CurrentCamera.CFrame.p, (Mouse.Hit.p - game.Workspace.CurrentCamera.CFrame.p).unit * DISTANCE)
-                local HIT,POS = game.Workspace:FindPartOnRay(RAY, game.Workspace)
-                local DIFF = math.floor((POS - AIM.Position).magnitude)
-                PLAYER_HOLD[v.Name .. i] = {}
-                PLAYER_HOLD[v.Name .. i].dist= DISTANCE
-                PLAYER_HOLD[v.Name .. i].plr = v
-                PLAYER_HOLD[v.Name .. i].diff = DIFF
-                table.insert(DISTANCES, DIFF)
-            elseif getgenv().TeamCheck == false and v.Team == Client.Team then 
-                local DISTANCE = (v.Character:FindFirstChild("Head").Position - game.Workspace.CurrentCamera.CFrame.p).magnitude
-                local RAY = Ray.new(game.Workspace.CurrentCamera.CFrame.p, (Mouse.Hit.p - game.Workspace.CurrentCamera.CFrame.p).unit * DISTANCE)
-                local HIT,POS = game.Workspace:FindPartOnRay(RAY, game.Workspace)
-                local DIFF = math.floor((POS - AIM.Position).magnitude)
-                PLAYER_HOLD[v.Name .. i] = {}
-                PLAYER_HOLD[v.Name .. i].dist= DISTANCE
-                PLAYER_HOLD[v.Name .. i].plr = v
-                PLAYER_HOLD[v.Name .. i].diff = DIFF
-                table.insert(DISTANCES, DIFF)
-            end
-        end
-    end
+local espEnabled = false
+local espCache = {};
+
+local function createEsp(player)
+    local drawings = {};
     
-    if unpack(DISTANCES) == nil then
-        return nil
-    end
-    
-    local L_DISTANCE = math.floor(math.min(unpack(DISTANCES)))
-    if L_DISTANCE > getgenv().AimRadius then
-        return nil
-    end
-    
-    for i, v in pairs(PLAYER_HOLD) do
-        if v.diff == L_DISTANCE then
-            return v.plr
-        end
-    end
-    return nil
+    drawings.name = newDrawing("Text");
+    drawings.name.Size = 18;
+    drawings.name.Center = true;
+    drawings.name.Outline = true;
+    drawings.name.Color = settings.defaultcolor;
+    drawings.name.Visible = false;
+
+    espCache[player] = drawings;
 end
 
-Mouse.KeyDown:Connect(function(a)
-    if a == AimlockKey and AimlockTarget == nil then
-        pcall(function()
-            if MousePressed ~= true then MousePressed = true end 
-            local Target;Target = GetNearestTarget()
-            if Target ~= nil then 
-                AimlockTarget = Target
-            end
-        end)
-    elseif a == AimlockKey and AimlockTarget ~= nil then
-        if AimlockTarget ~= nil then AimlockTarget = nil end
-        if MousePressed ~= false then 
-            MousePressed = false 
+local function removeEsp(player)
+    if rawget(espCache, player) then
+        for _, drawing in next, espCache[player] do
+            drawing:Remove();
+        end
+        espCache[player] = nil;
+    end
+end
+
+local function updateEsp(player, esp)
+    local character = player.Character;
+    local head = character and character:FindFirstChild("Head");
+    if head then
+        local position, visible, depth = wtvp(head.Position + Vector3.new(0, 1.5, 0)); -- Adjust to position the name above the head
+        esp.name.Visible = visible;
+
+        if visible then
+            local x, y = position.X, position.Y;
+            esp.name.Position = newVector2(x, y);
+            esp.name.Text = player.Name;
+            esp.name.Color = settings.teamcolor and player.TeamColor.Color or settings.defaultcolor;
+        end
+    else
+        esp.name.Visible = false;
+    end
+end
+
+local function toggleESP(enabled)
+    espEnabled = enabled
+    if not espEnabled then
+        for _, drawings in pairs(espCache) do
+            drawings.name.Visible = false
         end
     end
+end
+
+-- main
+for _, player in next, players:GetPlayers() do
+    if player ~= localPlayer then
+        createEsp(player);
+    end
+end
+
+players.PlayerAdded:Connect(function(player)
+    createEsp(player);
+end);
+
+players.PlayerRemoving:Connect(function(player)
+    removeEsp(player);
 end)
---[[
-Mouse.KeyDown:Connect(function(a)
-    if a == AimlockToggleKey then
-        Aimlock = not Aimlock
-    end
-end)
-]]
-RService.RenderStepped:Connect(function()
-    if getgenv().ThirdPerson == true and getgenv().FirstPerson == true then 
-        if (Camera.Focus.p - Camera.CoordinateFrame.p).Magnitude > 1 or (Camera.Focus.p - Camera.CoordinateFrame.p).Magnitude <= 1 then 
-            CanNotify = true 
-        else 
-            CanNotify = false 
-        end
-    elseif getgenv().ThirdPerson == true and getgenv().FirstPerson == false then 
-        if (Camera.Focus.p - Camera.CoordinateFrame.p).Magnitude > 1 then 
-            CanNotify = true 
-        else 
-            CanNotify = false 
-        end
-    elseif getgenv().ThirdPerson == false and getgenv().FirstPerson == true then 
-        if (Camera.Focus.p - Camera.CoordinateFrame.p).Magnitude <= 1 then 
-            CanNotify = true 
-        else 
-            CanNotify = false 
-        end
-    end
-    if Aimlock == true and MousePressed == true then 
-        if AimlockTarget and AimlockTarget.Character and AimlockTarget.Character:FindFirstChild(getgenv().AimPart) then 
-            if getgenv().FirstPerson == true then
-                if CanNotify == true then
-                    if getgenv().PredictMovement == true then 
-                        Camera.CFrame = CF(Camera.CFrame.p, AimlockTarget.Character[getgenv().AimPart].Position + AimlockTarget.Character[getgenv().AimPart].Velocity/PredictionVelocity)
-                    elseif getgenv().PredictMovement == false then 
-                        Camera.CFrame = CF(Camera.CFrame.p, AimlockTarget.Character[getgenv().AimPart].Position)
-                    end
-                end
-            elseif getgenv().ThirdPerson == true then 
-                if CanNotify == true then
-                    if getgenv().PredictMovement == true then 
-                        Camera.CFrame = CF(Camera.CFrame.p, AimlockTarget.Character[getgenv().AimPart].Position + AimlockTarget.Character[getgenv().AimPart].Velocity/PredictionVelocity)
-                    elseif getgenv().PredictMovement == false then 
-                        Camera.CFrame = CF(Camera.CFrame.p, AimlockTarget.Character[getgenv().AimPart].Position)
-                    end
-                end 
+
+runService:BindToRenderStep("esp", Enum.RenderPriority.Camera.Value, function()
+    if espEnabled then
+        for player, drawings in next, espCache do
+            if settings.teamcheck and player.Team == localPlayer.Team then
+                continue;
+            end
+
+            if drawings and player ~= localPlayer then
+                updateEsp(player, drawings);
             end
         end
     end
 end)
+
+-- Rayfield UI Setup
+local Window = Rayfield:CreateWindow({
+    Name = "Tubiu",
+    LoadingTitle = "I love you.",
+    LoadingSubtitle = "Tubis!!",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = nil,
+        FileName = "ESP_Toggle"
+    },
+    Discord = {
+        Enabled = false,
+        Invite = "",
+        RememberJoins = true
+    },
+    KeySystem = false
+})
+
+local Tab = Window:CreateTab("Criminality stuff.")
+
+local Toggle = Tab:CreateToggle({
+    Name = "Enable ESP",
+    CurrentValue = espEnabled,
+    Callback = function(value)
+        toggleESP(value)
+    end
+})
+
+local Button = Tab:CreateButton({
+   Name = "Auto lockpick",
+   Callback = function()
+   loadstring(game:HttpGet(('https://raw.githubusercontent.com/Iceyze/crim-autolockpick/main/main.lua')))()
+   end,
+})
+
+local Button = Tab:CreateButton({
+   Name = "Safe esp",
+   Callback = function()
+   loadstring(game:HttpGet(('https://raw.githubusercontent.com/efk0666/safesp/main/saferegister')))()
+   end,
+})
+
+local Button = Tab:CreateButton({
+   Name = "Torso Aimbot",
+   Callback = function()
+  loadstring(game:HttpGet(('https://raw.githubusercontent.com/efk0666/Tubi/main/aimbot')))()
+   end,
+})
+
+local Button = Tab:CreateButton({
+   Name = "Head Aimbot",
+   Callback = function()
+   loadstring(game:HttpGet(('https://raw.githubusercontent.com/efk0666/Tubiuhub/main/headaimbot')))()
+   end,
+})
+
+local Tab = Window:CreateTab("Combat warriors")
+
+local Button = Tab:CreateButton({
+   Name = "Hitbox Expender Press T",
+   Callback = function()
+   loadstring(game:HttpGet(('https://raw.githubusercontent.com/efk0666/hitboxexpender/main/hitbox')))()
+   end,
+})
+
+local Tab = Window:CreateTab("Random")
+
+local Slider = Tab:CreateSlider({
+   Name = "Fov",
+   Range = {0, 120},
+   Increment = 5,
+   Suffix = "Fov",
+   CurrentValue = 10,
+   Flag = "Slider1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+   Callback = function(Value)
+workspace.CurrentCamera.FieldOfView = Value
+   end,
+})
+
+local Button = Tab:CreateButton({
+   Name = "FullBright",
+   Callback = function()
+   loadstring(game:HttpGet(('https://raw.githubusercontent.com/efk0666/fullbright/main/bright')))()
+   end,
+})
