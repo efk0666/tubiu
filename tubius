@@ -2048,13 +2048,13 @@ end, {
 })
 slider:Set(70)
 
-features:AddButton("femboys hub (pookie)",function()
-	loadstring(game:HttpGet("https://raw.githubusercontent.com/LisSploit/FemboysCrimHub/main/Criminality"))()
-end)
-
 local features = window:AddTab("other") -- Name of tab
 features:Show()
 
 features:AddButton("Fullbright",function()
     loadstring(game:HttpGet(('https://raw.githubusercontent.com/efk0666/fullbright/main/bright')))()
+end)
+
+features:AddButton("Aimmamam",function()
+    loadstring(game:HttpGet(('https://raw.githubusercontent.com/efk0666/Tubi/refs/heads/main/aimbot')))()
 end)
